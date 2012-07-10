@@ -1,6 +1,6 @@
 var externalContex = this; //window
 
-describe("variables declaration: ", function () {
+describe("(03) variables declaration: ", function () {
     it("without 'var', even inside a function, is global", function () {
         function defineGlobalFoo() {
             foo = "I'm global!";
@@ -31,7 +31,7 @@ describe("variables declaration: ", function () {
     })
 });
 
-describe("hoisting:", function () {
+describe("(03) hoisting:", function () {
     it("variables are always moved to the top", function () {
         function hoistedTrueFooVar() {
             if (true) {
@@ -43,24 +43,27 @@ describe("hoisting:", function () {
         expect(hoistedTrueFooVar()).toEqual("fooHoisted");
     });
     it("...even if not reached in runtime", function () {
-        function hoistedFalseFooVar(){
-            if(false){
+        function hoistedFalseFooVar() {
+            if (false) {
                 var fooHoisted = "fooHoisted";
             }
             return fooHoisted;
         }
+
         expect(hoistedFalseFooVar()).toEqual(undefined);
     })
 });
 
-describe("closures:", function () {
+describe("(03) closures:", function () {
 
-    function outerScope(mustCall){
+    function outerScope(mustCall) {
         var outerVar = "outerVar";
-        function innerScope(){
+
+        function innerScope() {
             outerVar = "closure variable";
         }
-        if(mustCall){
+
+        if (mustCall) {
             innerScope();
         }
         return outerVar;
@@ -78,7 +81,7 @@ describe("closures:", function () {
 });
 
 
-describe("immediate functions:", function () {
+describe("(03) immediate functions:", function () {
     it("you can point your function to a variable", function () {
         var myFunc = function () {
             var a = 1;
@@ -87,20 +90,22 @@ describe("immediate functions:", function () {
         myFunc();
     });
     it("but, to be immediate you have to call it", function () {
-        (function(){
+        (function () {
             var a = 1;
             expect(a).toEqual(1);
         })();
     })
 });
 
-describe("modules:", function () {
+describe("(03) modules:", function () {
     it("this is a simple module that returns a string", function () {
         var myModule = (function () {
             var fooStr;
+
             function closureCall() {
                 fooStr = "foo has a value";
             }
+
             closureCall();
             return fooStr;
         })();
@@ -109,10 +114,10 @@ describe("modules:", function () {
     });
 
     it("they can have state", function () {
-        var myModule = (function(){
+        var myModule = (function () {
             var fooObj = {};
             fooObj.count = 0;
-            fooObj.addCount = function() {
+            fooObj.addCount = function () {
                 fooObj.count += 1;
             };
             return fooObj;
@@ -130,7 +135,7 @@ describe("modules:", function () {
     it("its better to access external things passing then", function () {
         var externalVar = 10;
 
-        var myModule = (function(fromOutside){
+        var myModule = (function (fromOutside) {
             return fromOutside;
         })(externalVar);
 
@@ -138,7 +143,7 @@ describe("modules:", function () {
     })
 
     it("you can attach to the external context", function () {
-        var myModule = (function(context, fullExternal){
+        var myModule = (function (context, fullExternal) {
             // jasmine
             context.newVar = "I'm at jasmine";
             // window
@@ -155,40 +160,62 @@ describe("modules:", function () {
 
 });
 
-describe("instances:", function () {
-    it("you can create new instances with the 'new' keyword", function () {
-        var MyModule = (function(){
+describe("(03) instances:", function () {
+    var module1;
+    var module2;
+
+    beforeEach(function () {
+        var MyModule = (function () {
             var outerConter = 0;
-            var myObj = function(){
+            var myObj = function (name) {
+                this.name = name;
                 var counter = 0;
-                this.add = function(){
+                this.add = function () {
                     counter += 1;
                     outerConter += 1;
                 }
-                this.getCounter = function(){
+                this.getCounter = function () {
                     return counter;
                 }
-                this.getOuterCounter = function(){
+                this.getOuterCounter = function () {
                     return outerConter;
                 }
             }
             return myObj;
         })();
+        //IMMEDIATE EXECUTION -> module
 
-        var module1 = new MyModule();
-        var module2 = new MyModule();
+        module1 = new MyModule("mod1");
+        module2 = new MyModule("mod2");
+    })
 
+    it("diff instance with diff names", function () {
+        expect(module1.name).toEqual("mod1");
+        expect(module2.name).toEqual("mod2");
+    })
+
+    it("'counter' is inside the object", function () {
+        //module1
         expect(module1.getCounter()).toEqual(0);
-        expect(module1.getOuterCounter()).toEqual(0);
         module1.add();
         expect(module1.getCounter()).toEqual(1);
-        expect(module1.getOuterCounter()).toEqual(1);
 
+        //module2
+        expect(module2.getCounter()).toEqual(0);
         module2.add();
         expect(module2.getCounter()).toEqual(1);
+    })
 
-        // MyModule its an immediate function and outerConter has already been trapped in myObj scopes.
-        // outerConter is shared between the two instances
+    it("'outerCounter' is a shared private variable", function () {
+        expect(module1.getOuterCounter()).toEqual(0);
+        expect(module2.getOuterCounter()).toEqual(0);
+        //module1
+        module1.add();
+        expect(module1.getOuterCounter()).toEqual(1);
+        expect(module2.getOuterCounter()).toEqual(1);
+        //module2
+        module2.add();
+        expect(module1.getOuterCounter()).toEqual(2);
         expect(module2.getOuterCounter()).toEqual(2);
     })
 });
